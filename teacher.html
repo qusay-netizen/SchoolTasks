@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>موقع المعلم</title>
+<style>
+  body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; padding-bottom:70px; background-color:#f9f9f9; }
+  input, select, button { margin: 5px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
+  input:focus, select:focus { border-color: #4CAF50; outline: none; }
+  button { background-color: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+  button:hover { background-color: #45a049; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th { background-color: #4CAF50; color: white; text-align: center; padding: 8px; }
+  td { text-align: center; padding: 8px; }
+  tr:nth-child(even) {background-color: #f2f2f2;}
+  tr:hover {background-color: #ddd; cursor: pointer;}
+  footer { position: fixed; bottom: 0; right: 10px; font-weight: bold; background-color: #f9f9f9; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+</style>
+</head>
+<body>
+
+<h2>تسجيل دخول المعلم</h2>
+<input type="password" id="teacherPassword" placeholder="كلمة السر">
+<button onclick="login()">دخول</button>
+
+<div id="teacherSection" style="display:none;">
+  <h2>صفحة المعلم</h2>
+  <button onclick="clearData()" style="background-color:red;">مسح كل البيانات</button>
+  <h4>إضافة طالب جديد:</h4>
+  <input type="text" id="newStudent" placeholder="اسم الطالب الجديد">
+  <button onclick="addStudent()">إضافة الطالب</button>
+  <label>اختر الطالب:</label>
+  <select id="studentSelect" onchange="updateTestTable()"></select>
+  <input type="text" id="testName" placeholder="اسم المادة">
+  <label>اختر نوع الاختبار:</label>
+  <select id="testType" onchange="toggleFinalScore()">
+    <option value="شهري1">شهري 1</option>
+    <option value="شهري2">شهري 2</option>
+    <option value="نهائي">الاختبار النهائي</option>
+  </select>
+  <input type="number" id="testScore" placeholder="درجة الاختبار من 40" min="0" max="40">
+  <input type="number" id="finalScore" placeholder="درجة الامتحان النهائي من 30" min="0" max="30" style="display:none;">
+  <input type="text" id="teacherNote" placeholder="ملاحظة المعلم">
+  <button onclick="saveTest()">إضافة / تعديل الاختبار</button>
+  <table id="testTable"></table>
+</div>
+<footer>من تنفيذ: قصي الضريبي</footer>
+
+<script>
+const PASSWORD = 'abc123';
+let tests = [];
+let studentsList = [];
+let editingIndex = null;
+
+window.onload = function() {
+  const savedTests = localStorage.getItem('tests');
+  const savedStudents = localStorage.getItem('studentsList');
+  if (savedTests) tests = JSON.parse(savedTests);
+  if (savedStudents) studentsList = JSON.parse(savedStudents);
+  updateStudentSelect();
+  toggleFinalScore();
+}
+
+function login() { 
+  const pw = document.getElementById('teacherPassword').value; 
+  if (pw === PASSWORD) { 
+    document.getElementById('teacherSection').style.display = 'block'; 
+    document.getElementById('teacherPassword').style.display = 'none'; 
+    event.target.style.display = 'none'; 
+  } else { 
+    alert('كلمة السر خاطئة'); 
+  }
+}
+
+function clearData() { 
+  if(confirm('هل أنت متأكد أنك تريد مسح كل البيانات؟')){
+    localStorage.removeItem('tests'); 
+    localStorage.removeItem('studentsList'); 
+    tests = []; 
+    studentsList = []; 
+    updateStudentSelect(); 
+    updateTestTable(); 
+  }
+}
+
+function addStudent() { 
+  const newStudent = document.getElementById('newStudent').value.trim(); 
+  if (!newStudent) { alert('الرجاء إدخال اسم الطالب'); return; } 
+  if (!studentsList.includes(newStudent)) { 
+    studentsList.push(newStudent); 
+    localStorage.setItem('studentsList', JSON.stringify(studentsList)); 
+    updateStudentSelect(); 
+    document.getElementById('newStudent').value = ''; 
+  } else { 
+    alert('الطالب موجود بالفعل'); 
+  }
+}
+
+function updateStudentSelect() { 
+  const select = document.getElementById('studentSelect'); 
+  select.innerHTML = ''; 
+  studentsList.forEach(s => { 
+    const option = document.createElement('option'); 
+    option.value = s; 
+    option.text = s; 
+    select.add(option); 
+  }); 
+  updateTestTable();
+}
+
+function toggleFinalScore() { 
+  const testType = document.getElementById('testType').value; 
+  document.getElementById('finalScore').style.display = (testType === 'نهائي') ? 'inline-block' : 'none';
+}
+
+function saveTest() { 
+  const student = document.getElementById('studentSelect').value; 
+  const testName = document.getElementById('testName').value.trim(); 
+  const testType = document.getElementById('testType').value; 
+  const testScore = parseInt(document.getElementById('testScore').value); 
+  const finalScore = testType==='نهائي' ? parseInt(document.getElementById('finalScore').value) : null; 
+  const teacherNote = document.getElementById('teacherNote').value.trim(); 
+  if (!student || !testName || isNaN(testScore) || (testType==='نهائي' && isNaN(finalScore))) { 
+    alert('الرجاء ملء كل الحقول بشكل صحيح'); 
+    return; 
+  } 
+  if(editingIndex !== null){ 
+    tests[editingIndex] = { student, testName, testType, testScore, finalScore, teacherNote }; 
+    editingIndex = null; 
+  } else { 
+    tests.push({ student, testName, testType, testScore, finalScore, teacherNote }); 
+  } 
+  localStorage.setItem('tests', JSON.stringify(tests)); 
+  localStorage.setItem('studentsList', JSON.stringify(studentsList)); 
+  updateTestTable(); 
+  document.getElementById('testName').value=''; 
+  document.getElementById('testScore').value=''; 
+  document.getElementById('finalScore').value=''; 
+  document.getElementById('teacherNote').value=''; 
+}
+
+function updateTestTable() { 
+  const selectedStudent = document.getElementById('studentSelect').value; 
+  const table = document.getElementById('testTable'); 
+  table.innerHTML = '<tr><th>المادة</th><th>نوع الاختبار</th><th>درجة 40</th><th>درجة 30</th><th>ملاحظة المعلم</th></tr>'; 
+  tests.forEach((t,index)=>{
+    if(t.student===selectedStudent){ 
+      const row = table.insertRow(); 
+      row.insertCell(0).innerText = t.testName; 
+      row.insertCell(1).innerText = t.testType==='نهائي' ? 'الاختبار النهائي' : t.testType; 
+      row.insertCell(2).innerText = t.testScore+'/40'; 
+      row.insertCell(3).innerText = t.finalScore!==null ? t.finalScore+'/30':'-'; 
+      row.insertCell(4).innerText = t.teacherNote; 
+      row.onclick = ()=>{
+        document.getElementById('testName').value = t.testName; 
+        document.getElementById('testType').value = t.testType; 
+        toggleFinalScore(); 
+        document.getElementById('testScore').value = t.testScore; 
+        document.getElementById('finalScore').value = t.finalScore !== null ? t.finalScore : ''; 
+        document.getElementById('teacherNote').value = t.teacherNote; 
+        editingIndex = index; 
+      }; 
+    } 
+  });
+}
+</script>
+</body>
+</html>

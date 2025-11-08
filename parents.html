@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>موقع الأهل</title>
+<style>
+  body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; padding-bottom:70px; background-color:#f9f9f9; }
+  select { margin: 5px; padding: 6px; border-radius: 4px; border: 1px solid #ccc; }
+  select:focus { border-color: #4CAF50; outline: none; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th { background-color: #4CAF50; color: white; text-align: center; padding: 8px; }
+  td { text-align: center; padding: 8px; }
+  tr:nth-child(even) {background-color: #f2f2f2;}
+  tr:hover {background-color: #ddd;}
+  footer { position: fixed; bottom: 0; right: 10px; font-weight: bold; background-color: #f9f9f9; padding: 5px 10px; border-radius: 5px 5px 0 0; }
+</style>
+</head>
+<body>
+<h2>جدول درجات الطلاب</h2>
+<label>اختر الطالب:</label>
+<select id="studentSelect" onchange="updateTestTable()"></select>
+<table id="testTable"></table>
+<footer>من تنفيذ: قصي الضريبي</footer>
+<script>
+let tests = [];
+let studentsList = [];
+window.onload = function() {
+  const savedTests = localStorage.getItem('tests');
+  const savedStudents = localStorage.getItem('studentsList');
+  if (savedTests) tests = JSON.parse(savedTests);
+  if (savedStudents) studentsList = JSON.parse(savedStudents);
+  updateStudentSelect();
+}
+function updateStudentSelect() {
+  const select = document.getElementById('studentSelect');
+  select.innerHTML = '';
+  studentsList.forEach(s => { const option = document.createElement('option'); option.value = s; option.text = s; select.add(option); });
+  updateTestTable();
+}
+function updateTestTable() {
+  const selectedStudent = document.getElementById('studentSelect').value;
+  const table = document.getElementById('testTable');
+  table.innerHTML = '<tr><th>المادة</th><th>نوع الاختبار</th><th>درجة 40</th><th>درجة 30</th><th>ملاحظة المعلم</th></tr>';
+  tests.forEach(t => { 
+    if(t.student === selectedStudent){ 
+      const row = table.insertRow(); 
+      row.insertCell(0).innerText = t.testName; 
+      row.insertCell(1).innerText = t.testType==='نهائي' ? 'الاختبار النهائي' : t.testType; 
+      row.insertCell(2).innerText = t.testScore+'/40'; 
+      row.insertCell(3).innerText = t.finalScore !== null ? t.finalScore+'/30':'-'; 
+      row.insertCell(4).innerText = t.teacherNote; 
+    } 
+  });
+}
+</script>
+</body>
+</html>

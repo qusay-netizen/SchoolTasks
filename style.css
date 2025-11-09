@@ -58,6 +58,28 @@ tr:hover {
     background-color: #ddd;
 }
 
+/* ترويسة للرابط العلوي - الزاوية العليا اليسرى */
+header {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: #4CAF50;
+    padding: 8px 14px;
+    border-radius: 6px;
+    z-index: 1000;
+}
+
+header .top-link {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header .top-link:hover {
+    text-decoration: underline;
+}
+
+/* الفوتر يبقى أسفل يمين الصفحة */
 footer {
     position: fixed;
     bottom: 0;
